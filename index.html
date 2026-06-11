@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PassForge — Free Strong Password Generator & Passphrase Maker. Secure, No Upload.</title>
+<meta name="description" content="Generate strong random passwords and memorable passphrases online for free. Cryptographically secure, crack-time strength meter, all in your browser, no upload.">
+<style>
+  :root { --bg:#f5f7fb; --panel:#ffffff; --border:#dee4f0; --text:#1a2235; --muted:#69748e; --accent:#dc2626; --accent-dark:#b91c1c; --green:#16a34a; }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body { background:var(--bg); color:var(--text); font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif; }
+  header { background:var(--panel); border-bottom:1px solid var(--border); padding:14px 24px; display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; z-index:20; }
+  .logo { font-weight:800; font-size:19px; }
+  .logo span { color:var(--accent); }
+  .pill { background:#fdecec; border:1px solid #f6c8c8; color:var(--accent-dark); padding:7px 14px; border-radius:99px; font-size:13px; font-weight:600; }
+  .hero { text-align:center; padding:38px 20px 4px; }
+  .hero h1 { font-size:clamp(25px,4.2vw,38px); letter-spacing:-.7px; }
+  .hero h1 em { font-style:normal; color:var(--accent); }
+  .hero p { color:var(--muted); max-width:620px; margin:12px auto 0; font-size:16px; line-height:1.65; }
+  .wrap { max-width:920px; margin:26px auto 60px; padding:0 18px; display:grid; grid-template-columns:1fr 1.25fr; gap:16px; align-items:start; }
+  @media (max-width:860px){ .wrap { grid-template-columns:1fr; } }
+  .card { background:var(--panel); border:1px solid var(--border); border-radius:16px; padding:18px; }
+  .tabs { display:flex; gap:8px; margin-bottom:16px; }
+  .tab { flex:1; text-align:center; padding:10px; border:1px solid var(--border); border-radius:10px; background:#f6f8fc; font-weight:600; font-size:14px; cursor:pointer; transition:.15s; }
+  .tab:hover { background:#eef1f8; }
+  .tab.on { background:var(--accent); border-color:var(--accent); color:#fff; }
+  .ctl { margin-bottom:14px; }
+  .ctl label { display:flex; justify-content:space-between; font-size:14px; font-weight:600; margin-bottom:6px; }
+  .ctl label span { color:var(--muted); font-weight:400; }
+  input[type=range] { width:100%; accent-color:var(--accent); cursor:pointer; }
+  .opt { display:flex; align-items:center; gap:8px; font-size:14px; padding:6px 0; cursor:pointer; user-select:none; }
+  .opt input { width:16px; height:16px; accent-color:var(--accent); cursor:pointer; }
+  select { background:#f6f8fc; border:1px solid var(--border); border-radius:9px; padding:9px 10px; font-size:14px; color:var(--text); font-family:inherit; cursor:pointer; width:100%; }
+  select:focus { outline:none; border-color:var(--accent); }
+  .btn { background:#f1f3fa; border:1px solid var(--border); color:var(--text); padding:10px 16px; border-radius:9px; font-size:14px; font-weight:600; cursor:pointer; transition:.15s; }
+  .btn:hover { background:#e9ecf6; }
+  .btn.primary { background:var(--accent); border-color:var(--accent); color:#fff; width:100%; padding:13px; font-size:15px; }
+  .btn.primary:hover { background:var(--accent-dark); }
+  .meter { margin-bottom:14px; }
+  .meter .lab { display:flex; justify-content:space-between; font-size:13px; margin-bottom:5px; }
+  .meter .lab b { font-size:13.5px; }
+  .meter .lab span { color:var(--muted); }
+  .mbar { height:9px; background:#e8ecf5; border-radius:99px; overflow:hidden; }
+  .mbar i { display:block; height:100%; border-radius:99px; transition:.25s; }
+  .crack { font-size:13.5px; color:var(--muted); margin-top:7px; line-height:1.5; }
+  .crack b { color:var(--text); }
+  .results { display:flex; flex-direction:column; gap:9px; }
+  .pw { display:flex; align-items:center; gap:10px; background:#f6f8fc; border:1px solid var(--border); border-radius:11px; padding:11px 13px; cursor:pointer; transition:.15s; }
+  .pw:hover { border-color:var(--accent); background:#fffafa; }
+  .pw code { flex:1; font:14.5px/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; word-break:break-all; }
+  .pw .cp { color:var(--accent-dark); font-size:12.5px; font-weight:700; white-space:nowrap; }
+  .hint { color:var(--muted); font-size:13px; margin-top:12px; line-height:1.55; }
+  .toast { position:fixed; left:50%; transform:translateX(-50%); bottom:64px; background:#1a2235; color:#fff; padding:10px 18px; border-radius:10px; font-size:14px; opacity:0; pointer-events:none; transition:.25s; z-index:50; }
+  .toast.show { opacity:1; }
+  .content { max-width:760px; margin:0 auto 40px; padding:0 18px; }
+  .content h2 { font-size:22px; margin:34px 0 14px; }
+  details { background:var(--panel); border:1px solid var(--border); border-radius:12px; padding:14px 18px; margin-bottom:10px; }
+  summary { font-weight:600; cursor:pointer; font-size:15px; }
+  details p { color:var(--muted); font-size:14px; line-height:1.65; margin-top:9px; }
+  footer { border-top:1px solid var(--border); background:var(--panel); padding:28px 20px 90px; }
+  footer .inner { max-width:760px; margin:0 auto; }
+  footer h4 { font-size:14px; margin-bottom:10px; }
+  footer .links { display:flex; flex-wrap:wrap; gap:8px 18px; margin-bottom:16px; }
+  footer .links a { color:var(--accent-dark); font-size:13.5px; text-decoration:none; }
+  footer .links a:hover { text-decoration:underline; }
+  footer .fine { color:var(--muted); font-size:13px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Pass<span>Forge</span></div>
+  <span class="pill">Crypto-secure · offline</span>
+</header>
+
+<div class="hero">
+  <h1>Strong <em>Password Generator</em> &amp; Passphrase Maker</h1>
+  <p>Forge truly random passwords with your browser's cryptographic generator, or memorable passphrases like <b>plasma-otter-violin-cliff</b>. See exactly how long each would take to crack. Nothing ever leaves your device.</p>
+</div>
+
+<div class="wrap">
+  <div class="card">
+    <div class="tabs">
+      <div class="tab on" id="tabPw">Password</div>
+      <div class="tab" id="tabPh">Passphrase</div>
+    </div>
+
+    <div id="pwCtls">
+      <div class="ctl">
+        <label>Length <span id="lenVal">16 characters</span></label>
+        <input type="range" id="len" min="8" max="64" value="16">
+      </div>
+      <label class="opt"><input type="checkbox" id="oUpper" checked> Uppercase letters (A&ndash;Z)</label>
+      <label class="opt"><input type="checkbox" id="oLower" checked> Lowercase letters (a&ndash;z)</label>
+      <label class="opt"><input type="checkbox" id="oDigit" checked> Numbers (0&ndash;9)</label>
+      <label class="opt"><input type="checkbox" id="oSym" checked> Symbols (!@#$%...)</label>
+      <label class="opt"><input type="checkbox" id="oAmb"> Exclude look-alikes (0 O o 1 l I | ` ' &quot;)</label>
+    </div>
+
+    <div id="phCtls" style="display:none">
+      <div class="ctl">
+        <label>Words <span id="nwVal">4 words</span></label>
+        <input type="range" id="nw" min="4" max="6" value="4">
+      </div>
+      <div class="ctl">
+        <label>Separator</label>
+        <select id="sep">
+          <option value="-">hyphen (-)</option>
+          <option value=".">dot (.)</option>
+          <option value="_">underscore (_)</option>
+          <option value=" ">space</option>
+        </select>
+      </div>
+      <label class="opt"><input type="checkbox" id="oCap"> Capitalize each word</label>
+      <label class="opt"><input type="checkbox" id="oNum"> Append a 2-digit number</label>
+    </div>
+
+    <div style="margin-top:14px">
+      <button class="btn primary" id="bGen">Generate 5 passwords</button>
+    </div>
+    <p class="hint">Generated with <b>crypto.getRandomValues()</b> — the same cryptographically secure randomness your browser uses for TLS. Nothing is stored or transmitted.</p>
+  </div>
+
+  <div class="card">
+    <div class="meter">
+      <div class="lab"><b id="strLabel">Strength</b><span id="strBits"></span></div>
+      <div class="mbar"><i id="strBar" style="width:0%;background:var(--green)"></i></div>
+      <div class="crack" id="crack">Pick your options and hit Generate.</div>
+    </div>
+    <div class="results" id="results"></div>
+    <p class="hint" id="clickHint" style="display:none">Click any password to copy it. New set is generated every time — none are kept.</p>
+  </div>
+</div>
+
+<div class="content">
+  <h2>FAQ</h2>
+  <details><summary>Is it safe to use an online password generator?</summary><p>It is safe when the generator runs entirely in your browser, like this one. PassForge uses your browser's built-in crypto.getRandomValues() and makes zero network requests — you can load the page, go offline, and generate passwords with the internet unplugged.</p></details>
+  <details><summary>Password or passphrase — which should I use?</summary><p>For accounts where you paste from a password manager, a 16+ character random password is ideal. For things you must type or remember (computer login, master password), a 4&ndash;6 word passphrase like "ember-walrus-cargo-tulip" is far easier to remember at comparable strength.</p></details>
+  <details><summary>How long should a password be in 2026?</summary><p>At least 16 random characters for important accounts, or a passphrase of 4+ random words. Below 12 random characters, modern GPU rigs can brute-force many hashes uncomfortably fast.</p></details>
+  <details><summary>How is the crack time estimated?</summary><p>We compute entropy bits from your settings (length &times; log&#8322; of the character pool, or words &times; log&#8322; of the word list), then assume an offline attacker testing 10 billion guesses per second and report the average time to hit your password.</p></details>
+  <details><summary>What does "exclude look-alikes" do?</summary><p>It removes characters that are easy to confuse when reading or typing a password by hand: 0/O/o, 1/l/I/|, and quote-like marks. Slightly less entropy per character, far fewer typing mistakes.</p></details>
+  <details><summary>Are the generated passwords stored anywhere?</summary><p>No. They exist only on your screen and in your clipboard when you copy one. There is no server, no logging, no analytics on the generated values.</p></details>
+</div>
+
+<footer>
+  <div class="inner">
+    <h4>More free tools</h4>
+    <div class="links">
+      <a href="https://robin0725.github.io/subkit/" target="_blank">SubKit — fix subtitle timing</a>
+      <a href="https://robin0725.github.io/foreverqr/" target="_blank">ForeverQR — permanent QR codes</a>
+      <a href="https://robin0725.github.io/fillsign/" target="_blank">FillSign — fill &amp; sign PDFs</a>
+      <a href="https://robin0725.github.io/shotgloss/" target="_blank">ShotGloss — polish screenshots</a>
+      <a href="https://robin0725.github.io/jsonpretty/" target="_blank">JSONPretty — format JSON</a>
+      <a href="https://robin0725.github.io/diffpeek/" target="_blank">DiffPeek — compare two texts</a>
+      <a href="https://robin0725.github.io/wordcounta/" target="_blank">WordCounta — word counter</a>
+      <a href="https://robin0725.github.io/favicongen/" target="_blank">FaviconGen — make favicons</a>
+      <a href="https://robin0725.github.io/agecalc/" target="_blank">AgeCalc — exact age calculator</a>
+    </div>
+    <div class="fine">&copy; 2026 · Runs entirely in your browser. Your files never leave your device.</div>
+  </div>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  function track(name, data) { if (window.PFB) window.PFB.action(name, data); }
+  var mode = 'password';
+
+  var WORDS = 'acid acorn actor adobe agent alarm album alert alley alloy almond aloe alpha amber angle ankle antler apple apron arch arena argon armor arrow aspen atlas atom attic audio august aunt autumn avid axis bacon badge bagel baker bald balsa bamboo banjo barley barn basil basket baton bay beach beacon bead beak beam bean bear beard beaver bell belt bench berry bicep birch bison black blade blanket blaze blend blimp blink bloom blue bluff board boat bolt bone bonus book boot border botany bottle boulder bow bowl box brain branch brass brave bread breeze brick bridge brisk broad bronze brook broom brown brush bubble bucket budge buffalo bugle bulb bull bumper bundle bunker burlap burrow butter button cabin cable cactus camel cameo camp canal candle candy cane canoe canvas canyon cape car cargo carol carp carrot cart cedar celery cellar cello chain chair chalk charm chart chase cheese chef cherry chess chest chief chill chime chin chip choir chord cider cinema circle citrus city civic clam clarinet clasp claw clay clean clear cleat cliff climb cloak clock cloud clover club clutch coach coal coast cobalt cocoa code coil coin cola cold collar comet compass cone copper coral cord cork corn cosmos cotton couch cougar court cover crab craft crane crate crater crayon cream creek crepe crescent crest cricket crisp crow crown cruise crumb crust crystal cub cube curb curl current curve cushion cycle cypress daisy dance dart dash date dawn deck deer delta denim depot desert desk dial diary dice diesel dime dingo dinner dock dome donor dough dove dozen draft dragon drape drift drill drum dry duck dune dusk dust eagle earth easel east echo eclipse edge eel ego eight elbow elder elk elm ember emblem emerald empty engine envy epoch equal era ergo essay etch ethos evening event exit fable falcon fall fang farm fawn feast feather fence fern ferry fiber fiddle field fig film filter fin finch fire fish fjord flag flame flash flask fleet flint float flock floor flora flour flute foam fog foil fold forest forge fort forum fossil fox frame freight fresh frog frost fruit fudge fuel fungus funnel fur futon gala galaxy gale gallon game garden garlic gate gauge gazebo gear gecko gem genre geode giant gift ginger glacier glade glass glaze glide globe glove glow gold golf gondola gong goose gorge gourd grain grand granite grape grass gravel gravy green grid grill grin grotto grove guitar gulf gull gum gust habit hail half hall hammer hammock harbor harp hat hatch haven hawk hay hazel heart hearth heat hedge helium helmet herb heron hexagon hickory hill hinge hippo hive hobby hockey hold hollow holly home honey hood hook horizon horn horse hose hotel hour house hub hull human humor hut hybrid ice icon idea igloo image index ink inlet iris iron island ivory ivy jade jaguar jar jasper jazz jeep jelly jet jewel jigsaw joke joy judge juice july jumbo june jungle junior juniper kale kayak kazoo keel keep kelp kettle key kick kiln kilt kind king kiosk kite kiwi knee knight knoll koala krill lab lace ladder lagoon lake lamb lamp lance land lantern lapel larch lark laser latch lattice laurel lava lawn leaf ledge legend lemon lens lentil level lever light lilac lily lime linen lion lobby lobster local lodge loft log loom loop lotus lounge lumber lunar lunch lynx macaw machine magma magnet maize mango mantle map maple marble march mare marina marsh mason mast match meadow medal melon mentor menu mesa metal meteor metro mill mint mirror mist moat mocha model mole monitor month moon moose morning mosaic moss motel moth motor mound mount mouse mover mule mural music musk myth nacho name nap navy nebula nectar nest net'.split(' ');
+
+  function toast(t) {
+    var el = $('toast');
+    el.textContent = t;
+    el.classList.add('show');
+    clearTimeout(toast._t);
+    toast._t = setTimeout(function () { el.classList.remove('show'); }, 1600);
+  }
+
+  /* unbiased secure random integer in [0, n) */
+  function rnd(n) {
+    var lim = Math.floor(4294967296 / n) * n;
+    var buf = new Uint32Array(1);
+    do { crypto.getRandomValues(buf); } while (buf[0] >= lim);
+    return buf[0] % n;
+  }
+
+  var SETS = {
+    upper: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
+    lower: 'abcdefghijklmnopqrstuvwxyz',
+    digit: '0123456789',
+    sym: '!@#$%^&*()-_=+[]{}<>?/.,;:~'
+  };
+  var AMB = /[0Oo1lI|`'".,;:]/g;
+
+  function activeSets() {
+    var picked = [];
+    if ($('oUpper').checked) picked.push(SETS.upper);
+    if ($('oLower').checked) picked.push(SETS.lower);
+    if ($('oDigit').checked) picked.push(SETS.digit);
+    if ($('oSym').checked) picked.push(SETS.sym);
+    if ($('oAmb').checked) picked = picked.map(function (s) { return s.replace(AMB, ''); });
+    return picked.filter(function (s) { return s.length; });
+  }
+
+  function makePassword(len, sets) {
+    var pool = sets.join('');
+    for (var attempt = 0; attempt < 100; attempt++) {
+      var out = '';
+      for (var i = 0; i < len; i++) out += pool[rnd(pool.length)];
+      var ok = sets.every(function (s) {
+        for (var j = 0; j < out.length; j++) if (s.indexOf(out[j]) >= 0) return true;
+        return false;
+      });
+      if (ok) return out;
+    }
+    return out;
+  }
+
+  function makePhrase(n, sep, cap, num) {
+    var parts = [];
+    for (var i = 0; i < n; i++) {
+      var w = WORDS[rnd(WORDS.length)];
+      if (cap) w = w.charAt(0).toUpperCase() + w.slice(1);
+      parts.push(w);
+    }
+    var s = parts.join(sep);
+    if (num) s += sep + (rnd(90) + 10);
+    return s;
+  }
+
+  function entropyBits() {
+    if (mode === 'password') {
+      var pool = activeSets().join('').length;
+      if (!pool) return 0;
+      return +($('len').value) * Math.log2(pool);
+    }
+    var bits = +($('nw').value) * Math.log2(WORDS.length);
+    if ($('oNum').checked) bits += Math.log2(90);
+    return bits;
+  }
+
+  function crackText(bits) {
+    var sec = Math.pow(2, bits - 1) / 1e10; /* avg guesses at 10B/sec offline */
+    var units = [[60, 'seconds'], [60, 'minutes'], [24, 'hours'], [365, 'days'], [Infinity, 'years']];
+    if (sec < 1) return 'cracked instantly';
+    var v = sec, name = 'seconds';
+    for (var i = 0; i < units.length; i++) {
+      name = units[i][1];
+      if (v < units[i][0]) break;
+      if (units[i][0] !== Infinity) v /= units[i][0];
+    }
+    if (name === 'years') {
+      if (v > 1.4e10) return 'longer than the age of the universe to crack';
+      if (v > 1e9) return 'about ' + Math.round(v / 1e9) + ' billion years to crack';
+      if (v > 1e6) return 'about ' + Math.round(v / 1e6) + ' million years to crack';
+      if (v > 1000) return 'about ' + Math.round(v / 1000) + ' thousand years to crack';
+    }
+    return 'about ' + Math.round(v) + ' ' + name + ' to crack';
+  }
+
+  function updateMeter() {
+    var bits = entropyBits();
+    var pct = Math.min(100, bits / 128 * 100);
+    var label, color;
+    if (bits < 40) { label = 'Weak'; color = '#dc2626'; }
+    else if (bits < 60) { label = 'Fair'; color = '#d97706'; }
+    else if (bits < 80) { label = 'Strong'; color = '#65a30d'; }
+    else { label = 'Excellent'; color = '#16a34a'; }
+    $('strLabel').textContent = 'Strength: ' + (bits ? label : '—');
+    $('strBits').textContent = bits ? Math.round(bits) + ' bits of entropy' : '';
+    var bar = $('strBar');
+    bar.style.width = pct + '%';
+    bar.style.background = color;
+    $('crack').innerHTML = bits
+      ? 'An offline attacker at 10 billion guesses/second would need <b>' + crackText(bits) + '</b>.'
+      : 'Select at least one character set.';
+    return bits;
+  }
+
+  function generate() {
+    var bits = updateMeter();
+    var list = [];
+    if (mode === 'password') {
+      var sets = activeSets();
+      if (!sets.length) { toast('Select at least one character set'); return; }
+      var len = +($('len').value);
+      for (var i = 0; i < 5; i++) list.push(makePassword(len, sets));
+      track('generate', { mode: 'password', len: len });
+    } else {
+      var n = +($('nw').value);
+      for (var j = 0; j < 5; j++) list.push(makePhrase(n, $('sep').value, $('oCap').checked, $('oNum').checked));
+      track('generate', { mode: 'passphrase', len: n });
+    }
+    var box = $('results');
+    box.innerHTML = '';
+    list.forEach(function (p) {
+      var div = document.createElement('div');
+      div.className = 'pw';
+      div.setAttribute('role', 'button');
+      div.title = 'Click to copy';
+      var code = document.createElement('code');
+      code.textContent = p;
+      var cp = document.createElement('span');
+      cp.className = 'cp';
+      cp.textContent = 'copy';
+      div.append(code, cp);
+      div.onclick = function () {
+        navigator.clipboard.writeText(p).then(function () {
+          cp.textContent = 'copied!';
+          setTimeout(function () { cp.textContent = 'copy'; }, 1400);
+          toast('Password copied');
+          track('copy');
+        }, function () { toast('Copy failed'); });
+      };
+      box.appendChild(div);
+    });
+    $('clickHint').style.display = 'block';
+  }
+
+  function setMode(m) {
+    if (m === mode) return;
+    mode = m;
+    $('tabPw').className = 'tab' + (m === 'password' ? ' on' : '');
+    $('tabPh').className = 'tab' + (m === 'passphrase' ? ' on' : '');
+    $('pwCtls').style.display = m === 'password' ? '' : 'none';
+    $('phCtls').style.display = m === 'passphrase' ? '' : 'none';
+    $('bGen').textContent = m === 'password' ? 'Generate 5 passwords' : 'Generate 5 passphrases';
+    track('mode_switch', { mode: m });
+    generate();
+  }
+
+  $('tabPw').onclick = function () { setMode('password'); };
+  $('tabPh').onclick = function () { setMode('passphrase'); };
+  $('bGen').onclick = generate;
+
+  $('len').addEventListener('input', function () {
+    $('lenVal').textContent = this.value + ' characters';
+    updateMeter();
+  });
+  $('nw').addEventListener('input', function () {
+    $('nwVal').textContent = this.value + ' words';
+    updateMeter();
+  });
+  ['oUpper', 'oLower', 'oDigit', 'oSym', 'oAmb', 'oNum'].forEach(function (id) {
+    $(id).addEventListener('change', updateMeter);
+  });
+
+  generate(); /* first screen is instantly useful */
+})();
+</script>
+
+<script>
+/* PulseFB v1 — embedded friction & feedback tracker. No backend, no cookies, privacy-friendly.
+   Inline this entire script at the end of <body>, replacing Robin0725/passforge with "Robin0725/<repo-name>".
+   Key features:
+   - rage-click detection (3+ clicks in same spot within 800ms = user is stuck there)
+   - dead-click detection (click on non-interactive area that changed nothing)
+   - JS error capture
+   - key-action funnel via PFB.action('name', {...})
+   - events kept in localStorage ring buffer (last 600)
+   - rage click -> gentle nudge bar -> prefilled GitHub issue WITH auto-diagnostics attached
+   - floating "Feedback" button -> same prefilled issue
+   - owner dashboard: open page with ?debug=1 to see per-element click counts, rage hotspots, funnel
+*/
+(function () {
+  var REPO = 'Robin0725/passforge';
+  var KEY = 'pfb_v1';
+  var MAX = 600;
+  var buf = [];
+  try { buf = JSON.parse(localStorage.getItem(KEY) || '[]'); } catch (e) { buf = []; }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(buf.slice(-MAX))); } catch (e) {} }
+  function log(type, data) {
+    var ev = { t: Date.now(), type: type };
+    if (data) for (var k in data) ev[k] = data[k];
+    buf.push(ev); save();
+  }
+  function sel(el) {
+    if (!el || el === document || el === document.documentElement) return 'page';
+    var s = (el.tagName || '?').toLowerCase();
+    if (el.id) return s + '#' + el.id;
+    if (el.className && typeof el.className === 'string' && el.className.trim())
+      s += '.' + el.className.trim().split(/\s+/).slice(0, 2).join('.');
+    var txt = (el.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 20);
+    return txt ? s + '"' + txt + '"' : s;
+  }
+
+  log('pageview', { w: innerWidth, h: innerHeight, ref: document.referrer.slice(0, 60) });
+
+  /* clicks + rage + dead */
+  var recent = [];
+  document.addEventListener('click', function (e) {
+    var now = Date.now();
+    var interactive = e.target.closest('button,a,input,select,textarea,label,[role="button"],summary,[contenteditable]');
+    var target = interactive || e.target;
+    log('click', { el: sel(target), x: e.clientX, y: e.clientY });
+
+    recent = recent.filter(function (c) { return now - c.t < 800 && Math.hypot(c.x - e.clientX, c.y - e.clientY) < 30; });
+    recent.push({ t: now, x: e.clientX, y: e.clientY });
+    if (recent.length >= 3) {
+      log('rage', { el: sel(target), x: e.clientX, y: e.clientY, n: recent.length });
+      recent = [];
+      nudge(sel(target));
+    }
+    if (!interactive) {
+      var before = document.body.innerHTML.length;
+      setTimeout(function () {
+        if (Math.abs(document.body.innerHTML.length - before) < 3) log('deadclick', { el: sel(e.target) });
+      }, 600);
+    }
+  }, true);
+
+  window.addEventListener('error', function (e) {
+    log('jserror', { msg: String(e.message || e).slice(0, 140) });
+  });
+
+  /* public API: PFB.action('compress_done', {kb: 120}) */
+  window.PFB = {
+    action: function (name, data) { var d = data || {}; d.name = name; log('action', d); },
+    log: log
+  };
+
+  /* prefilled GitHub issue = feedback channel (works on any device, no backend) */
+  function openIssue(title) {
+    var lines = buf.slice(-25).map(function (e) { return JSON.stringify(e); }).join('\n');
+    var body = 'What were you trying to do?\n\n(write here)\n\n---\nAuto-diagnostics (recent events):\n```\n' + lines + '\n```';
+    var url = 'https://github.com/' + REPO + '/issues/new?title=' +
+      encodeURIComponent('[feedback] ' + title) + '&body=' + encodeURIComponent(body).slice(0, 6000);
+    window.open(url, '_blank');
+  }
+
+  /* rage nudge bar */
+  var nudged = false;
+  function nudge(el) {
+    if (nudged) return; nudged = true;
+    log('nudge_shown', { el: el });
+    var bar = document.createElement('div');
+    bar.style.cssText = 'position:fixed;left:50%;transform:translateX(-50%);bottom:18px;background:#1a2235;color:#fff;padding:11px 16px;border-radius:12px;font-size:14px;z-index:99999;display:flex;gap:10px;align-items:center;box-shadow:0 8px 24px rgba(0,0,0,.25);max-width:92vw';
+    bar.innerHTML = 'Something not working there? <button style="background:#7c3aed;color:#fff;border:0;padding:6px 12px;border-radius:8px;cursor:pointer;font-size:13px">Tell us</button><button style="background:none;border:0;color:#9aa3b8;cursor:pointer;font-size:13px">Dismiss</button>';
+    var btns = bar.querySelectorAll('button');
+    btns[0].onclick = function () { log('nudge_report', { el: el }); openIssue('Stuck on: ' + el); bar.remove(); };
+    btns[1].onclick = function () { log('nudge_dismiss', { el: el }); bar.remove(); };
+    document.body.appendChild(bar);
+    setTimeout(function () { if (bar.parentNode) bar.remove(); }, 15000);
+  }
+
+  /* floating feedback button */
+  var fb = document.createElement('button');
+  fb.textContent = '💬 Feedback';
+  fb.setAttribute('aria-label', 'Send feedback');
+  fb.style.cssText = 'position:fixed;right:14px;bottom:14px;z-index:99998;background:#fff;border:1px solid #dee4f0;border-radius:99px;padding:8px 14px;font-size:13px;cursor:pointer;box-shadow:0 4px 14px rgba(20,30,60,.12);color:#1a2235';
+  fb.onclick = function () { log('feedback_open', {}); openIssue('User feedback'); };
+  document.body.appendChild(fb);
+
+  /* ?debug=1 owner dashboard */
+  if (/[?&]debug=1/.test(location.search)) {
+    var agg = { pageview: 0, click: {}, rage: {}, deadclick: {}, jserror: {}, action: {} };
+    buf.forEach(function (e) {
+      if (e.type === 'pageview') agg.pageview++;
+      else if (e.type === 'click') agg.click[e.el] = (agg.click[e.el] || 0) + 1;
+      else if (e.type === 'rage') agg.rage[e.el] = (agg.rage[e.el] || 0) + 1;
+      else if (e.type === 'deadclick') agg.deadclick[e.el] = (agg.deadclick[e.el] || 0) + 1;
+      else if (e.type === 'jserror') agg.jserror[e.msg] = (agg.jserror[e.msg] || 0) + 1;
+      else if (e.type === 'action') agg.action[e.name] = (agg.action[e.name] || 0) + 1;
+    });
+    function rows(obj, color) {
+      return Object.keys(obj).sort(function (a, b) { return obj[b] - obj[a]; }).slice(0, 12)
+        .map(function (k) { return '<tr><td style="padding:3px 8px;color:' + (color || '#1a2235') + '">' + k.replace(/</g, '&lt;') + '</td><td style="padding:3px 8px;text-align:right;font-weight:700">' + obj[k] + '</td></tr>'; }).join('') || '<tr><td style="padding:3px 8px;color:#9aa3b8">none</td></tr>';
+    }
+    var panel = document.createElement('div');
+    panel.style.cssText = 'position:fixed;top:10px;right:10px;width:340px;max-height:86vh;overflow:auto;background:#fff;border:1px solid #dee4f0;border-radius:14px;box-shadow:0 12px 40px rgba(20,30,60,.2);z-index:100000;font-size:12px;padding:14px;color:#1a2235;font-family:ui-monospace,Menlo,monospace';
+    panel.innerHTML =
+      '<div style="font-weight:800;font-size:14px;margin-bottom:8px">PulseFB — this device (' + buf.length + ' events, ' + agg.pageview + ' visits)</div>' +
+      '<div style="font-weight:700;color:#dc2626;margin-top:8px">🔥 Rage clicks (problem spots)</div><table>' + rows(agg.rage, '#dc2626') + '</table>' +
+      '<div style="font-weight:700;color:#d97706;margin-top:8px">💀 Dead clicks</div><table>' + rows(agg.deadclick, '#d97706') + '</table>' +
+      '<div style="font-weight:700;margin-top:8px">🖱 Top clicked</div><table>' + rows(agg.click) + '</table>' +
+      '<div style="font-weight:700;margin-top:8px">⚡ Key actions</div><table>' + rows(agg.action, '#16a34a') + '</table>' +
+      '<div style="font-weight:700;color:#dc2626;margin-top:8px">🐞 JS errors</div><table>' + rows(agg.jserror, '#dc2626') + '</table>' +
+      '<div style="margin-top:10px;display:flex;gap:8px">' +
+      '<button id="pfbExp" style="flex:1;padding:6px;border:1px solid #dee4f0;border-radius:8px;background:#f5f7fb;cursor:pointer">Export JSON</button>' +
+      '<button id="pfbClr" style="flex:1;padding:6px;border:1px solid #dee4f0;border-radius:8px;background:#f5f7fb;cursor:pointer">Clear</button></div>';
+    document.body.appendChild(panel);
+    panel.querySelector('#pfbExp').onclick = function () {
+      var a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([JSON.stringify(buf, null, 1)], { type: 'application/json' }));
+      a.download = 'pulsefb-events.json'; a.click();
+    };
+    panel.querySelector('#pfbClr').onclick = function () { localStorage.removeItem(KEY); location.reload(); };
+  }
+})();
+
+</script>
+</body>
+</html>
